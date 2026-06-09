@@ -19,6 +19,7 @@ type config struct {
 	includeUndocumented bool
 	includeInternal     bool
 	includeAll          bool
+	werror              bool
 }
 
 func newRootCommand(stdout io.Writer, stderr io.Writer) *cobra.Command {
@@ -44,6 +45,7 @@ By default the command reads from stdin when no file arguments are provided.`,
 	cmd.Flags().BoolVar(&cfg.includeUndocumented, "include-undocumented", false, "Include undocumented functions in the parsed document")
 	cmd.Flags().BoolVar(&cfg.includeInternal, "include-internal", false, "Include @internal functions in the parsed document")
 	cmd.Flags().BoolVar(&cfg.includeAll, "include-all", false, "Shorthand for --include-undocumented --include-internal")
+	cmd.Flags().BoolVar(&cfg.werror, "werror", false, "Treat all warnings as linting errors")
 
 	return cmd
 }
@@ -70,6 +72,7 @@ func runLint(stdout io.Writer, stderr io.Writer, cfg *config) error {
 	}
 
 	totalIssues := 0
+	totalWarns := 0
 	for _, target := range targets {
 		src, displayName, err := readInput(target)
 		if err != nil {
@@ -87,6 +90,8 @@ func runLint(stdout io.Writer, stderr io.Writer, cfg *config) error {
 			}
 		}
 
+		totalWarns += len(warns)
+
 		issues := lint.Document(doc, lint.Options{FunctionPrefix: cfg.functionPrefix})
 		for _, issue := range issues {
 			if _, err := fmt.Fprintf(stderr, "%s: function %q: %s\n", displayName, issue.FunctionName, issue.Message); err != nil {
@@ -97,8 +102,8 @@ func runLint(stdout io.Writer, stderr io.Writer, cfg *config) error {
 		totalIssues += len(issues)
 	}
 
-	if totalIssues > 0 {
-		return lint.ExitError{Code: 1, Message: fmt.Sprintf("lint failed with %d issue(s)", totalIssues)}
+	if totalIssues > 0 || (cfg.werror && totalWarns > 0) {
+		return lint.ExitError{Code: 1, Message: fmt.Sprintf("lint failed with %d issue(s) and %d warning(s)", totalIssues, totalWarns)}
 	}
 
 	if _, err := fmt.Fprintln(stdout, "lint passed"); err != nil {
