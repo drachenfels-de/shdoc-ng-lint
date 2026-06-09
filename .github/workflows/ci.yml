@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1.6
+          args: --timeout=5m
+
+      - name: Install gofumpt
+        run: go install mvdan.cc/gofumpt@v0.8.0
+
+      - name: Check formatting
+        run: |
+          files="$(find . -name '*.go' -not -path './.tools/*')"
+          test -n "$files"
+          diff -u <(printf '%s\n' "$files" | xargs gofumpt -l) /dev/null
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: go build ./...
