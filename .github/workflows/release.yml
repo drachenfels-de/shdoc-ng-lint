@@ -53,6 +53,7 @@ jobs:
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
+          draft: true
           files: |
             dist/*.tar.gz
             dist/*.zip
