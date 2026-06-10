@@ -1,0 +1,149 @@
+name: release-binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  releases: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build archives
+        run: |
+          mkdir -p dist
+          version="${GITHUB_REF_NAME:-dev}"
+          for target in \
+            "linux amd64" \
+            "linux arm64" \
+            "darwin amd64" \
+            "darwin arm64" \
+            "windows amd64"
+          do
+            set -- $target
+            ext=""
+            if [ "$1" = "windows" ]; then
+              ext=".exe"
+            fi
+            GOOS="$1" GOARCH="$2" go build -ldflags "-s -w -X main.version=$version" -o "dist/shdoc-ng-lint-$1-$2$ext" ./cmd/shdoc-ng-lint
+            asset_dir="dist/shdoc-ng-lint-${version}-$1-$2"
+            mkdir -p "$asset_dir"
+            cp "dist/shdoc-ng-lint-$1-$2$ext" "$asset_dir/"
+            cp README.md LICENSE "$asset_dir/" 2>/dev/null || true
+            if [ "$1" = "windows" ]; then
+              (cd dist && zip -rq "$(basename "$asset_dir").zip" "$(basename "$asset_dir")")
+            else
+              tar -C dist -czf "${asset_dir}.tar.gz" "$(basename "$asset_dir")"
+            fi
+          done
+
+      - name: Create or update release
+        id: release
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+
+          api_url = os.environ["GITHUB_API_URL"]
+          repo = os.environ["GITHUB_REPOSITORY"]
+          tag = os.environ["GITHUB_REF_NAME"]
+          token = os.environ["GITEA_TOKEN"]
+          headers = {
+              "Authorization": f"token {token}",
+              "Content-Type": "application/json",
+          }
+
+          def request(url, method="GET", data=None):
+              req = urllib.request.Request(url, data=data, headers=headers, method=method)
+              with urllib.request.urlopen(req) as resp:
+                  return json.load(resp)
+
+          try:
+              release = request(f"{api_url}/repos/{repo}/releases/tags/{tag}")
+          except urllib.error.HTTPError as err:
+              if err.code != 404:
+                  raise
+              payload = json.dumps(
+                  {
+                      "tag_name": tag,
+                      "name": tag,
+                      "draft": False,
+                      "prerelease": False,
+                  }
+              ).encode()
+              release = request(f"{api_url}/repos/{repo}/releases", method="POST", data=payload)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"release_id={release['id']}\n")
+          PY
+
+      - name: Upload release assets
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: |
+          python3 <<'PY'
+          import glob
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+
+          api_url = os.environ["GITHUB_API_URL"]
+          repo = os.environ["GITHUB_REPOSITORY"]
+          release_id = os.environ["RELEASE_ID"]
+          token = os.environ["GITEA_TOKEN"]
+
+          headers = {"Authorization": f"token {token}"}
+
+          release_req = urllib.request.Request(
+              f"{api_url}/repos/{repo}/releases/{release_id}",
+              headers=headers,
+          )
+          with urllib.request.urlopen(release_req) as resp:
+              release = json.load(resp)
+
+          assets = {asset["name"]: asset["id"] for asset in release.get("assets", [])}
+          for asset_path in sorted(glob.glob("dist/*.tar.gz") + glob.glob("dist/*.zip")):
+              asset_name = os.path.basename(asset_path)
+              existing_id = assets.get(asset_name)
+              if existing_id is not None:
+                  delete_req = urllib.request.Request(
+                      f"{api_url}/repos/{repo}/releases/{release_id}/assets/{existing_id}",
+                      headers=headers,
+                      method="DELETE",
+                  )
+                  with urllib.request.urlopen(delete_req):
+                      pass
+
+              with open(asset_path, "rb") as fh:
+                  upload_req = urllib.request.Request(
+                      f"{api_url}/repos/{repo}/releases/{release_id}/assets?name={urllib.parse.quote(asset_name)}",
+                      data=fh.read(),
+                      headers={
+                          **headers,
+                          "Content-Type": "application/octet-stream",
+                      },
+                      method="POST",
+                  )
+                  with urllib.request.urlopen(upload_req):
+                      pass
+          PY
