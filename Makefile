@@ -8,7 +8,7 @@ PATH := $(GOBIN):$(CURDIR)/.tools/go/bin:$(PATH)
 
 tools:
 	GOBIN=$(GOBIN) GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) install mvdan.cc/gofumpt@v0.8.0
-	GOBIN=$(GOBIN) GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+	GOBIN=$(GOBIN) GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 
 fmt:
 	find . -path './.tools' -prune -o -name '*.go' -print | xargs $(GOBIN)/gofumpt -w
