@@ -23,6 +23,9 @@ Workflows present:
 - `.github/workflows/ci.yml` runs formatting checks, `golangci-lint`, tests, and build
 - `.github/workflows/release.yml` builds and publishes release archives on version tags
 - `.github/workflows/docker.yml` builds and publishes multi-arch Docker images to GHCR
+- `.gitea/workflows/ci.yml` runs formatting checks, `golangci-lint`, tests, and build on Gitea Actions
+- `.gitea/workflows/release.yml` builds archives and publishes release assets on version tags in Gitea
+- `.gitea/workflows/docker.yml` builds and publishes multi-arch Docker images to the Gitea container registry
 
 Commit note requirement:
 - when creating a commit or commit message/comment for this repo, always add a Codex co-author note in the commit message body
