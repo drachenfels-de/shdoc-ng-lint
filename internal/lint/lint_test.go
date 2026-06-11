@@ -38,7 +38,7 @@ hello_world() {
 			parse: shdoc.ParseOptions{IncludeUndocumented: true},
 			want: []lint.Issue{
 				{FunctionName: "hello_world", Message: "missing non-empty @description"},
-				{FunctionName: "hello_world", Message: "missing non-empty @example"},
+				{FunctionName: "hello_world", Message: "missing @example"},
 				{FunctionName: "hello_world", Message: "must define @noargs or at least one non-zero @arg"},
 				{FunctionName: "hello_world", Message: "missing at least one @exitcode"},
 			},

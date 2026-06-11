@@ -37,8 +37,8 @@ func Document(doc shdoc.Document, opts Options) []Issue {
 			issues = append(issues, issue(fn.Name, "missing non-empty @description"))
 		}
 
-		if strings.TrimSpace(fn.Example) == "" {
-			issues = append(issues, issue(fn.Name, "missing non-empty @example"))
+		if len(fn.Examples) < 1 {
+			issues = append(issues, issue(fn.Name, "missing @example"))
 		}
 
 		if !fn.IsNoArgs && !hasNonZeroArg(fn.Args) {
