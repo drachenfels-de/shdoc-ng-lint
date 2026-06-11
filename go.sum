@@ -11,8 +11,8 @@ github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUq
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/jdevera/shdoc-ng v0.9.0 h1:0Js9X8UWmhoHX+hygneoBGv8SdSFYcot0s2DG0f1+do=
-github.com/jdevera/shdoc-ng v0.9.0/go.mod h1:2HtiBkBFuSWuF3cjYXPq1kI+4R2cEMyz7+5Q5Vazu7Y=
+github.com/r10r/shdoc-ng v0.0.0-20260611095124-9bd1ba309d06 h1:K2zwWWXSIlMAdazmeqZO++OuAR4RJerwi/1SeGIvyKc=
+github.com/r10r/shdoc-ng v0.0.0-20260611095124-9bd1ba309d06/go.mod h1:2HtiBkBFuSWuF3cjYXPq1kI+4R2cEMyz7+5Q5Vazu7Y=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/spf13/cobra v1.10.2 h1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=
 github.com/spf13/cobra v1.10.2/go.mod h1:7C1pvHqHw5A4vrJfjNwvOdzYu0Gml16OCs2GRiTUUS4=
