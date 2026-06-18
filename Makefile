@@ -1,4 +1,3 @@
-GO ?= $(CURDIR)/.tools/go/bin/go
 GOBIN ?= $(CURDIR)/.tools/bin
 GOCACHE ?= $(CURDIR)/.tools/gocache
 GOMODCACHE ?= $(CURDIR)/.tools/gomodcache
@@ -17,9 +16,13 @@ lint:
 	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GOBIN)/golangci-lint run ./...
 
 test:
-	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) test ./...
+	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) go test ./...
 
 build:
-	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build ./...
+	CGO_ENABLED=0 GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) go build -ldflags="-w -s" .
 
 ci: fmt lint test build
+
+release:
+	./release.sh
+
